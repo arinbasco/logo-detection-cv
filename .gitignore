@@ -1,0 +1,17 @@
+# Datos y resultados pesados
+data/
+runs/
+videos/
+
+# Pesos de modelos, salvo el modelo final
+*.pt
+!models/*.pt
+
+# Claves y entorno
+.env
+.venv/
+
+# Python y Jupyter
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
