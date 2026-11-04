@@ -15,6 +15,7 @@ Teclas en la ventana:  q = salir   espacio = pausa
 import argparse
 import ast
 import time
+from collections import defaultdict
 from pathlib import Path
 
 import cv2
@@ -123,6 +124,9 @@ def main() -> None:
     numero = 0
     saltados = 0
     inicio_real = time.perf_counter()
+    # Resumen por marca: confianzas de cada caja y, por cada análisis, qué marcas aparecieron
+    confianzas_por_marca: dict[str, list[float]] = defaultdict(list)
+    analisis: list[tuple[float, set[str]]] = []  # (segundo del vídeo, marcas detectadas)
 
     while True:
         # Si vamos atrasados respecto al reloj real, saltar fotogramas sin procesarlos
@@ -142,6 +146,9 @@ def main() -> None:
             detecciones = detector.detectar(fotograma, args.conf)
             tiempos_ms.append((time.perf_counter() - t0) * 1000)
             ultimo_analisis = segundo_video
+            for d in detecciones:
+                confianzas_por_marca[d["marca"]].append(d["confianza"])
+            analisis.append((segundo_video, {d["marca"] for d in detecciones}))
 
         dibujar(fotograma, detecciones)
         info = f"t={segundo_video:5.1f}s  modelo={tiempos_ms[-1]:.0f} ms" if tiempos_ms else ""
@@ -177,6 +184,33 @@ def main() -> None:
         print(f"Análisis hechos: {len(tiempos_ms)}, tiempo medio del modelo: {np.mean(tiempos_ms):.0f} ms")
         if duracion_real > numero / fps * 1.1:
             print("Aviso: la reproducción fue más lenta que el vídeo. Prueba con un --cada mayor.")
+        imprimir_resumen(confianzas_por_marca, analisis, numero / fps, args.conf)
+
+
+def imprimir_resumen(confianzas_por_marca: dict[str, list[float]],
+                     analisis: list[tuple[float, set[str]]],
+                     duracion_video: float, conf: float) -> None:
+    """Muestra, por marca, cuántas cajas hubo, sus confianzas y el tiempo aproximado en pantalla.
+
+    El tiempo se calcula como el tramo entre cada análisis en que aparece la marca y el
+    análisis siguiente, que es el tiempo durante el que su caja se ve en pantalla.
+    """
+    print(f"\nResumen por marca (umbral de confianza {conf})")
+    if not confianzas_por_marca:
+        print("  Ninguna detección.")
+        return
+
+    segundos: dict[str, float] = defaultdict(float)
+    for i, (inicio, marcas) in enumerate(analisis):
+        fin = analisis[i + 1][0] if i + 1 < len(analisis) else duracion_video
+        for marca in marcas:
+            segundos[marca] += fin - inicio
+
+    print(f"  {'Marca':<20}{'Cajas':>7}{'Conf. mín':>11}{'Media':>8}{'Máx':>7}{'Segundos':>10}{'% vídeo':>9}")
+    for marca, confs in sorted(confianzas_por_marca.items(), key=lambda m: -segundos[m[0]]):
+        porcentaje = 100 * segundos[marca] / duracion_video if duracion_video else 0
+        print(f"  {marca:<20}{len(confs):>7}{min(confs):>11.2f}{np.mean(confs):>8.2f}"
+            f"{max(confs):>7.2f}{segundos[marca]:>10.1f}{porcentaje:>8.1f}%")
 
 
 if __name__ == "__main__":
