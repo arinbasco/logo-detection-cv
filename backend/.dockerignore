@@ -1,0 +1,15 @@
+**/.env*
+.venv/
+data/
+tests/
+conftest.py
+requirements-dev.txt
+**/__pycache__/
+**/*.pyc
+.pytest_cache/
+**/*.db
+**/*.db-shm
+**/*.db-wal
+**/*.sqlite*
+Dockerfile
+.dockerignore

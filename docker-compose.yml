@@ -1,0 +1,65 @@
+# Demo en local con Docker Desktop. Compose resuelve cada ${VARIABLE} desde el .env de la raíz.
+# Los puertos se publican solo en 127.0.0.1: la app no queda abierta a la red.
+
+name: logo-detection-cv
+
+services:
+  api:
+    build: ./api
+    environment:
+      API_KEY: ${API_KEY}
+    ports:
+      - "127.0.0.1:8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+      start_interval: 2s
+
+  backend:
+    build: ./backend
+    environment:
+      MODEL_API_URL: http://api:8000
+      MODEL_API_KEY: ${MODEL_API_KEY}
+      DATABASE_URL: sqlite:////datos/logos.db
+      FRONT_ORIGIN: ${FRONT_ORIGIN}
+      MOSTRAR_DOCS: ${MOSTRAR_DOCS}
+      MODOS: ${MODOS}
+      LIMITE_EN_VIVO_POR_MINUTO: ${LIMITE_EN_VIVO_POR_MINUTO}
+    ports:
+      - "127.0.0.1:8001:8001"
+    volumes:
+      - datos:/datos
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/salud', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+      start_interval: 2s
+
+  front:
+    build:
+      context: ./front
+      args:
+        VITE_API_URL: http://127.0.0.1:8001
+    ports:
+      - "127.0.0.1:5173:5173"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--spider", "http://127.0.0.1:5173/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+      start_interval: 2s
+
+volumes:
+  datos:
