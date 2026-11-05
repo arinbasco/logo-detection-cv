@@ -1,0 +1,312 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/* Fuentes servidas desde el propio front, solo el subconjunto latino y los pesos que se usan */
+@import "@fontsource/noto-serif-jp/latin-900.css";
+@import "@fontsource/ibm-plex-sans/latin-400.css";
+@import "@fontsource/ibm-plex-sans/latin-600.css";
+@import "@fontsource/ibm-plex-mono/latin-400.css";
+@import "@fontsource/ibm-plex-mono/latin-600.css";
+
+/* Sistema visual: cartel editorial en amarillo y negro */
+@theme inline {
+  --color-amarillo: #f5d02e;
+  --color-negro: #111111;
+  --color-blanco: #ffffff;
+  --color-gris: #444444;
+  --color-pista: #eeeeee;
+  --color-amarillo-tenue: #e8d27a;
+  --color-grabando: #c8102e;
+
+  --font-titular: "Noto Serif JP", serif;
+  --font-texto: "IBM Plex Sans", system-ui, sans-serif;
+  --font-datos: "IBM Plex Mono", ui-monospace, monospace;
+  --font-sans: var(--font-texto);
+  --font-mono: var(--font-datos);
+  --font-heading: var(--font-titular);
+
+  /* Colores que usan los componentes de shadcn */
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+
+  /* Esquinas rectas en todo */
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
+  --radius-2xl: 0;
+  --radius-3xl: 0;
+  --radius-4xl: 0;
+}
+
+/* Tamaños de la maqueta que crecen dentro de .composicion */
+@theme {
+  --text-aviso: 13px;
+  --text-apoyo: 15px;
+  --text-rotulo: 28px;
+  --text-portada: clamp(56px, 7vw, 104px);
+  --text-cabeza: clamp(40px, 5vw, 64px);
+}
+
+:root {
+  --u: 1px; /* un píxel de la maqueta: crece dentro de .composicion */
+  --background: #ffffff;
+  --foreground: #111111;
+  --card: #ffffff;
+  --card-foreground: #111111;
+  --popover: #ffffff;
+  --popover-foreground: #111111;
+  --primary: #111111;
+  --primary-foreground: #f5d02e;
+  --secondary: #eeeeee;
+  --secondary-foreground: #111111;
+  --muted: #eeeeee;
+  --muted-foreground: #444444;
+  --accent: #f5d02e;
+  --accent-foreground: #111111;
+  --destructive: #111111;
+  --border: #111111;
+  --input: #111111;
+  --ring: #111111;
+  --radius: 0;
+}
+
+/*
+ * Escala del bloque de Análisis y En vivo. Va en la raíz para que la barra y el aviso de
+ * conexión calculen el mismo margen, pero solo .composicion la aplica a --u: lo que el
+ * Informe comparte con estas páginas no crece.
+ * El bloque base mide 1168 × 615 y escala hasta llenar la ventana, con 48 px a los lados
+ * y 32 arriba y abajo, sin pasar de 2016 de ancho.
+ */
+@media (min-width: 1100px) {
+  :root {
+    --alto-barra: 95px;
+    --u-composicion: clamp(1px, min((100vw - 96px) / 1168, (100svh - var(--alto-barra) - 64px) / 615), 1.726px);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    @apply font-texto text-negro;
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    @apply m-0 bg-amarillo;
+  }
+  a {
+    color: inherit;
+  }
+  /* El foco se ve siempre, en el color del texto: negro sobre amarillo, amarillo sobre negro */
+  :focus-visible {
+    outline: 3px solid currentColor;
+    outline-offset: 3px;
+  }
+}
+
+@layer components {
+  /* Bloque común de Análisis y En vivo: el mismo ancho y el mismo arranque en las dos páginas */
+  .composicion {
+    display: flex;
+    flex-wrap: wrap;
+    margin-inline: auto;
+    padding: 40px clamp(24px, 5vw, 80px) 64px;
+    font-size: calc(var(--u) * 16);
+  }
+
+  /* Relleno lateral de la barra y del aviso de conexión: el margen de .composicion */
+  .margen-composicion {
+    padding-inline: clamp(24px, 5vw, 80px);
+  }
+
+  /*
+   * Desde 1100 px todo se mide en --u. El bloque se centra con su alto fijo y no con el del
+   * contenido: si el contenido crece, baja sin mover el arranque.
+   */
+  @media (min-width: 1100px) {
+    .margen-composicion {
+      padding-inline: max(48px, (100% - var(--u-composicion) * 1168) / 2);
+    }
+
+    .composicion {
+      --u: var(--u-composicion);
+      --spacing: calc(var(--u) * 4);
+      --text-xs: calc(var(--u) * 12);
+      --text-sm: calc(var(--u) * 14);
+      --text-base: calc(var(--u) * 16);
+      --text-lg: calc(var(--u) * 18);
+      --text-aviso: calc(var(--u) * 13);
+      --text-apoyo: calc(var(--u) * 15);
+      --text-rotulo: calc(var(--u) * 28);
+      --text-portada: min(8.07vw, var(--u) * 101);
+      --text-cabeza: calc(var(--u) * 64);
+      flex-wrap: nowrap;
+      width: min(var(--u) * 1168, 100% - 96px);
+      min-height: calc(var(--u) * 615);
+      margin-block: max(32px, (100svh - var(--alto-barra) - var(--u) * 615) / 2) 32px;
+      padding: 0;
+    }
+  }
+
+  /* Franja de rotulador para cifras en Noto Serif JP: del 24 % al 86 % de la línea */
+  .resaltado-titular {
+    background: linear-gradient(transparent 24%, var(--color-amarillo) 24%, var(--color-amarillo) 86%, transparent 86%);
+    padding: 0 0.06em;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
+
+  /* Cifras resaltadas en el texto corrido */
+  .resaltado-texto {
+    background: var(--color-amarillo);
+    padding: 0 4px;
+    font-weight: 600;
+  }
+
+  /* Vídeo en blanco y negro: el color solo aparece en los trazos */
+  .video-en-gris {
+    filter: grayscale(1) contrast(1.05);
+  }
+
+  /* Grano de fotografía encima del vídeo */
+  .grano {
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 1.4 -0.2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+    opacity: 0.22;
+    mix-blend-mode: overlay;
+  }
+
+  /* Barra de tiempo del reproductor en vivo: tramo recorrido en negro, resto en negro al 20 % */
+  .barra-tiempo {
+    appearance: none;
+    background: linear-gradient(to right, var(--color-negro) var(--avance), rgb(17 17 17 / 0.2) var(--avance));
+    border-radius: 0;
+  }
+  .barra-tiempo::-webkit-slider-thumb {
+    appearance: none;
+    width: calc(var(--u) * 16);
+    height: calc(var(--u) * 16);
+    background: var(--color-negro);
+    border: 2px solid var(--color-amarillo);
+  }
+  .barra-tiempo::-moz-range-thumb {
+    width: calc(var(--u) * 16);
+    height: calc(var(--u) * 16);
+    background: var(--color-negro);
+    border: 2px solid var(--color-amarillo);
+    border-radius: 0;
+  }
+  .barra-tiempo:disabled {
+    opacity: 0.4;
+  }
+
+  .etiqueta-datos {
+    font-family: var(--font-datos);
+    font-size: var(--text-aviso);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+}
+
+/* Animaciones de la pantalla de carga, como en la maqueta */
+@keyframes trazo {
+  from { stroke-dashoffset: 1500; }
+  to { stroke-dashoffset: 0; }
+}
+@keyframes aparece {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes carga {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+@keyframes cinta {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@keyframes girar {
+  to { transform: rotate(360deg); }
+}
+
+.anim-trazo {
+  stroke-dasharray: 1500;
+  stroke-dashoffset: 1500;
+  animation: trazo 1.4s 0.6s cubic-bezier(0.6, 0, 0.2, 1) forwards;
+}
+.anim-trazo-2 {
+  stroke-dasharray: 1500;
+  stroke-dashoffset: 1500;
+  animation: trazo 1.2s 2.1s cubic-bezier(0.6, 0, 0.2, 1) forwards;
+}
+.anim-etiqueta {
+  opacity: 0;
+  animation: aparece 0.4s 1.9s ease-out forwards;
+}
+.anim-etiqueta-2 {
+  opacity: 0;
+  animation: aparece 0.4s 3.2s ease-out forwards;
+}
+.anim-barra {
+  animation: carga 3.6s 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+.anim-cinta {
+  animation: cinta 40s linear infinite;
+}
+.anim-girar {
+  animation: girar 0.8s linear infinite;
+}
+
+/* Transición entre páginas con la View Transitions API */
+::view-transition-old(root) {
+  animation: 160ms ease-out both desvanece;
+}
+::view-transition-new(root) {
+  animation: 360ms cubic-bezier(0.2, 0.7, 0.2, 1) both entra;
+}
+@keyframes desvanece {
+  to { opacity: 0; }
+}
+@keyframes entra {
+  from { opacity: 0; transform: translateY(24px); }
+}
+
+/* Con reducir movimiento no hay animaciones: todo aparece ya en su estado final */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .anim-girar {
+    animation: none !important;
+  }
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
